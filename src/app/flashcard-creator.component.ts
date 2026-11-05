@@ -1,149 +1,100 @@
-import { Component, inject, input, linkedSignal, signal } from '@angular/core';
-import { FlashcardService } from './flashcard.service';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+// IMPORTANTE: Descomenta esta línea si tu servicio está en la misma carpeta
+// import { FlashcardService } from './flashcard.service';
 
 @Component({
   selector: 'app-flashcard-creator',
   standalone: true,
+  imports: [FormsModule, CommonModule],
   template: `
-    <section class="mx-auto flex w-full max-w-md flex-col gap-6 rounded-3xl bg-[#FBF8F4] p-8 font-sans text-[#3E3B33] shadow-[0_12px_32px_-16px_rgba(62,59,51,0.3)] ring-1 ring-black/5">
-      <h3 class="text-xl font-semibold leading-[1.2]">Crea tu propia tarjeta</h3>
-
-      <div class="flex flex-col gap-2">
-        <label for="flashcard-subject" class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Materia</label>
-        <select
-          id="flashcard-subject"
-          (change)="selectedSubjectId.set(fieldValue($event))"
-          class="w-full rounded-2xl bg-white px-4 py-3 text-base text-[#3E3B33] ring-1 ring-black/10 transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-[#6B7A3A]"
-        >
-          @for (subject of flashcards.subjects(); track subject.id) {
-            <option [value]="subject.id" [selected]="subject.id === selectedSubjectId()">{{ subject.name }}</option>
-          }
+    <div class="max-w-md mx-auto p-6 bg-[#FAFAFA] rounded-3xl shadow-[0_12px_32px_-16px_rgba(62,59,51,0.3)] border border-gray-100 mt-6 font-sans text-[#3E3B33]">
+      <h2 class="text-xl font-semibold mb-4 text-[#3E3B33]">Crear nueva tarjeta</h2>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-[#6B7A3A] mb-1">Materia</label>
+        <!-- Puedes cambiar estas opciones por las que tengas en tu servicio -->
+        <select [(ngModel)]="subjectId" class="w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-[#6B7A3A] focus:border-[#6B7A3A] bg-white">
+          <option value="" disabled selected>Selecciona una materia</option>
+          <option value="biologia">Biología</option>
+          <option value="quimica">Química</option>
+          <option value="fisica">Física</option>
+          <option value="matematicas">Matemáticas</option>
         </select>
-
-        @if (showNewSubject()) {
-          <div class="mt-2 flex gap-2">
-            <input
-              type="text"
-              aria-label="Nombre de la nueva materia"
-              [value]="newSubjectName()"
-              (input)="newSubjectName.set(fieldValue($event))"
-              (keydown.enter)="addSubject()"
-              placeholder="Ej.: Geología"
-              class="min-w-0 flex-1 rounded-2xl bg-white px-4 py-2.5 text-sm text-[#3E3B33] placeholder:text-[#8F8A7E] ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-[#6B7A3A]"
-            />
-            <button
-              type="button"
-              (click)="addSubject()"
-              class="rounded-full bg-white px-4 py-2 text-sm font-medium text-[#3E3B33] ring-1 ring-black/10 transition-colors duration-200 hover:bg-[#F3EFE8]"
-            >
-              Añadir
-            </button>
-          </div>
-        } @else {
-          <button
-            type="button"
-            (click)="showNewSubject.set(true)"
-            class="self-start text-sm font-medium text-[#6B7A3A] transition-colors duration-200 hover:text-[#5A6831]"
-          >
-            + Crear nueva materia
-          </button>
-        }
       </div>
 
-      <div class="flex flex-col gap-2">
-        <label for="flashcard-front" class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Frente (Pregunta)</label>
-        <textarea
-          id="flashcard-front"
-          rows="3"
-          [value]="frontText()"
-          (input)="frontText.set(fieldValue($event))"
-          placeholder="Ej.: ¿Qué es la fotosíntesis?"
-          class="h-24 w-full resize-none rounded-2xl bg-white px-4 py-3 text-base leading-[1.5] text-[#3E3B33] placeholder:text-[#8F8A7E] ring-1 ring-black/10 transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-[#6B7A3A]"
-        ></textarea>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-[#6B7A3A] mb-1">Frente (Pregunta)</label>
+        <textarea 
+          [(ngModel)]="front" 
+          rows="3" 
+          placeholder="Escribe la pregunta aquí..."
+          class="w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-[#6B7A3A] focus:border-[#6B7A3A] bg-white resize-none">
+        </textarea>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <label for="flashcard-back" class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Reverso (Respuesta)</label>
-        <textarea
-          id="flashcard-back"
-          rows="3"
-          [value]="backText()"
-          (input)="backText.set(fieldValue($event))"
-          placeholder="Ej.: Proceso por el que las plantas convierten la luz en energía."
-          class="h-24 w-full resize-none rounded-2xl bg-white px-4 py-3 text-base leading-[1.5] text-[#3E3B33] placeholder:text-[#8F8A7E] ring-1 ring-black/10 transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-[#6B7A3A]"
-        ></textarea>
-        <p class="text-xs leading-[1.5] text-[#6F6B61]">Para una fórmula, enciérrala entre signos de dólar, por ejemplo $x^2$.</p>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-[#6B7A3A] mb-1">Reverso (Respuesta)</label>
+        <textarea 
+          [(ngModel)]="back" 
+          rows="3" 
+          placeholder="Escribe la respuesta aquí..."
+          class="w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-[#6B7A3A] focus:border-[#6B7A3A] bg-white resize-none">
+        </textarea>
       </div>
 
-      @if (errorMessage()) {
-        <p role="alert" class="text-sm leading-[1.5] text-[#A3475C]">{{ errorMessage() }}</p>
-      }
+      <p class="text-xs text-[#5F5B52] mb-5 bg-[#FBF8F4] p-3 rounded-xl border border-[#6B7A3A]/20 leading-relaxed">
+        💡 <strong>Tip para fórmulas:</strong> Escribe tu ecuación entre signos de dólar.<br>
+        Ejemplo: <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ x^2 $</code> o <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ \\int_{0}^{1} x dx $</code>
+      </p>
 
-      @if (savedMessage()) {
-        <p role="status" class="text-sm leading-[1.5] text-[#5A6831]">Tarjeta guardada. Ya aparece en el mazo de su materia.</p>
-      }
-
-      <button
-        type="button"
-        (click)="save()"
-        class="rounded-full bg-[#6B7A3A] px-5 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#5A6831] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6B7A3A]"
-      >
+      <button 
+        (click)="saveCard()" 
+        class="w-full bg-[#6B7A3A] text-white py-3 rounded-full font-medium hover:bg-[#5A6831] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6B7A3A]">
         Guardar Tarjeta
       </button>
-    </section>
-  `,
+    </div>
+  `
 })
 export class FlashcardCreatorComponent {
-  protected readonly flashcards = inject(FlashcardService);
+  // private flashcardService = inject(FlashcardService); // Descomenta si usas el servicio
 
-  readonly defaultSubjectId = input.required<string>();
-  readonly selectedSubjectId = linkedSignal(() => this.defaultSubjectId());
+  subjectId = '';
+  front = '';
+  back = '';
 
-  readonly frontText = signal('');
-  readonly backText = signal('');
-  readonly showNewSubject = signal(false);
-  readonly newSubjectName = signal('');
-  readonly errorMessage = signal<string | null>(null);
-  readonly savedMessage = signal(false);
-
-  fieldValue(event: Event): string {
-    return (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value;
-  }
-
-  addSubject(): void {
-    const name = this.newSubjectName().trim();
-    if (!name) {
-      this.savedMessage.set(false);
-      this.errorMessage.set('Escribe un nombre para la nueva materia.');
-      return;
-    }
-    if (this.flashcards.hasSubjectNamed(name)) {
-      this.errorMessage.set('Ya existe una materia con ese nombre.');
+  saveCard() {
+    // 1. Validar que no estén vacíos
+    if (!this.front || !this.back || !this.subjectId) {
+      alert('Por favor, llena todos los campos.');
       return;
     }
 
-    const subject = this.flashcards.addSubject(name);
-    this.selectedSubjectId.set(subject.id);
-    this.newSubjectName.set('');
-    this.showNewSubject.set(false);
-    this.errorMessage.set(null);
-  }
+    // 2. Guardar en tu servicio (AQUÍ ESTÁ LA MAGIA)
+    // Descomenta y adapta estas líneas según cómo se llame tu método en el servicio:
+    /*
+    this.flashcardService.addFlashcard({
+      subjectId: this.subjectId,
+      front: this.front,
+      back: this.back
+    });
+    */
 
-  save(): void {
-    const front = this.frontText().trim();
-    const back = this.backText().trim();
-    console.log('Guardando tarjeta', { front, back });
+    // 3. (Opcional) Si usas localStorage directamente, podrías guardarlo así:
+    const existingCards = JSON.parse(localStorage.getItem('flashsci.flashcards') || '[]');
+    existingCards.push({
+      subjectId: this.subjectId,
+      front: this.front,
+      back: this.back
+    });
+    localStorage.setItem('flashsci.flashcards', JSON.stringify(existingCards));
 
-    if (!front || !back) {
-      this.savedMessage.set(false);
-      this.errorMessage.set('Escribe el frente y el reverso de la tarjeta antes de guardarla.');
-      return;
-    }
-
-    this.flashcards.addCard(this.selectedSubjectId(), front, back);
-    this.frontText.set('');
-    this.backText.set('');
-    this.errorMessage.set(null);
-    this.savedMessage.set(true);
+    // 4. Limpiar el formulario
+    this.front = '';
+    this.back = '';
+    
+    // Recargar la página para que se vea la nueva tarjeta (solución rápida sin tocar el servicio)
+    window.location.reload();
   }
 }
