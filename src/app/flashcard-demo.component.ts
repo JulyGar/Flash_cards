@@ -1,13 +1,34 @@
 import { Component, OnDestroy, computed, inject, input, signal } from '@angular/core';
+import { KatexComponent } from 'ng-katex-2';
+import type { KatexOptions } from 'katex';
 import { FlashcardService } from './flashcard.service';
 import { FormulaTextComponent } from './formula-text.component';
 
 const FLIP_DURATION_MS = 600;
 
+const LATEX_MARKERS = /[\\^_{}=]/;
+
+const KATEX_OPTIONS: KatexOptions = { displayMode: false, throwOnError: false };
+
+type FaceContent = { kind: 'katex' | 'mixed' | 'text'; value: string };
+
+function faceContent(raw: string): FaceContent {
+  const text = raw.trim();
+  const inner = text.slice(1, -1);
+  const isWrapped = text.length > 1 && text.startsWith('$') && text.endsWith('$') && !inner.includes('$');
+
+  if (isWrapped) {
+    const formula = inner.trim();
+    return LATEX_MARKERS.test(formula) ? { kind: 'katex', value: formula } : { kind: 'text', value: formula };
+  }
+  if (text.includes('$')) return { kind: 'mixed', value: text };
+  return LATEX_MARKERS.test(text) ? { kind: 'katex', value: text } : { kind: 'text', value: text };
+}
+
 @Component({
   selector: 'app-flashcard-demo',
   standalone: true,
-  imports: [FormulaTextComponent],
+  imports: [FormulaTextComponent, KatexComponent],
   template: `
     <section class="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 font-sans text-[#3E3B33]">
       <header class="flex items-center justify-between text-sm">
@@ -51,10 +72,17 @@ const FLIP_DURATION_MS = 600;
               <span class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Pregunta</span>
               <div class="flex flex-1 items-center justify-center">
                 <p class="text-center text-xl font-medium leading-[1.5]">
-                  @if (containsFormula(currentCard().front)) {
-                    <app-formula-text [text]="currentCard().front" />
-                  } @else {
-                    {{ currentCard().front }}
+                  @let front = faceContentFor(currentCard().front);
+                  @switch (front.kind) {
+                    @case ('katex') {
+                      <ng-katex [equation]="front.value" [options]="katexOptions" />
+                    }
+                    @case ('mixed') {
+                      <app-formula-text [text]="front.value" />
+                    }
+                    @default {
+                      {{ front.value }}
+                    }
                   }
                 </p>
               </div>
@@ -63,10 +91,17 @@ const FLIP_DURATION_MS = 600;
               <span class="text-xs font-medium uppercase tracking-widest text-[#3E3B33]/70">Respuesta</span>
               <div class="flex flex-1 items-center justify-center">
                 <p class="text-center text-lg leading-[1.5]">
-                  @if (containsFormula(currentCard().back)) {
-                    <app-formula-text [text]="currentCard().back" />
-                  } @else {
-                    {{ currentCard().back }}
+                  @let back = faceContentFor(currentCard().back);
+                  @switch (back.kind) {
+                    @case ('katex') {
+                      <ng-katex [equation]="back.value" [options]="katexOptions" />
+                    }
+                    @case ('mixed') {
+                      <app-formula-text [text]="back.value" />
+                    }
+                    @default {
+                      {{ back.value }}
+                    }
                   }
                 </p>
               </div>
@@ -179,16 +214,15 @@ export class FlashcardDemoComponent implements OnDestroy {
   readonly isLast = computed(() => this.currentIndex() === this.cards().length - 1);
   readonly progressLabel = computed(() => `${this.cards().length === 0 ? 0 : this.currentIndex() + 1} / ${this.cards().length}`);
 
+  readonly katexOptions = KATEX_OPTIONS;
+  readonly faceContentFor = faceContent;
+
   private navigationTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnDestroy(): void {
     if (this.navigationTimer !== null) {
       clearTimeout(this.navigationTimer);
     }
-  }
-
-  containsFormula(text: string): boolean {
-    return text.includes('$');
   }
 
   flip(): void {
