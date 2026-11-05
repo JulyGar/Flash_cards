@@ -1,11 +1,13 @@
 import { Component, OnDestroy, computed, inject, input, signal } from '@angular/core';
 import { FlashcardService } from './flashcard.service';
+import { FormulaTextComponent } from './formula-text.component';
 
 const FLIP_DURATION_MS = 600;
 
 @Component({
   selector: 'app-flashcard-demo',
   standalone: true,
+  imports: [FormulaTextComponent],
   template: `
     <section class="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 font-sans text-[#3E3B33]">
       <header class="flex items-center justify-between text-sm">
@@ -48,13 +50,13 @@ const FLIP_DURATION_MS = 600;
             <div class="flashcard-face absolute inset-0 flex flex-col rounded-3xl bg-[#FBF8F4] p-8 shadow-[0_12px_32px_-16px_rgba(62,59,51,0.3)] ring-1 ring-black/5">
               <span class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Pregunta</span>
               <p class="flex flex-1 items-center justify-center text-center text-xl font-medium leading-[1.5]">
-                {{ currentCard().front }}
+                <app-formula-text [text]="currentCard().front" />
               </p>
             </div>
             <div class="flashcard-face flashcard-back absolute inset-0 flex flex-col rounded-3xl bg-[#F9E4E9] p-8 shadow-[0_12px_32px_-16px_rgba(62,59,51,0.3)] ring-1 ring-black/5">
               <span class="text-xs font-medium uppercase tracking-widest text-[#3E3B33]/70">Respuesta</span>
               <p class="flex flex-1 items-center justify-center text-center text-lg leading-[1.5]">
-                {{ currentCard().back }}
+                <app-formula-text [text]="currentCard().back" />
               </p>
             </div>
           </div>

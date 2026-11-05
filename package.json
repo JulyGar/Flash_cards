@@ -17,6 +17,11 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@types/katex": "^0.16.8",
+    "extract-math": "^1.2.3",
+    "katex": "^0.17.0",
+    "mathlive": "^0.111.4",
+    "ng-katex-2": "^22.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

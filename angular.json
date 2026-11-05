@@ -18,6 +18,9 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "allowedCommonJsDependencies": [
+              "extract-math"
+            ],
             "assets": [
               {
                 "glob": "**/*",
@@ -25,6 +28,7 @@
               }
             ],
             "styles": [
+              "node_modules/katex/dist/katex.min.css",
               "src/styles.css"
             ]
           },
@@ -33,7 +37,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "600kB",
                   "maximumError": "1MB"
                 },
                 {
