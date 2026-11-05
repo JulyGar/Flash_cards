@@ -16,7 +16,7 @@ const FORMULA_PATTERN = /\$([^$]+)\$/;
   template: `
     @for (segment of segments(); track $index) {
       @if (segment.isFormula) {
-        <ng-katex [equation]="segment.value" [options]="katexOptions" />
+        <ng-katex [equation]="segment.value" [options]="katexOptions()" />
       } @else {
         <span>{{ segment.value }}</span>
       }
@@ -33,5 +33,8 @@ export class FormulaTextComponent {
       .filter((segment) => segment.value.length > 0),
   );
 
-  readonly katexOptions: KatexOptions = { displayMode: false, throwOnError: false };
+  readonly katexOptions = computed<KatexOptions>(() => ({
+    displayMode: this.segments().length === 1 && this.segments()[0].isFormula,
+    throwOnError: false,
+  }));
 }
