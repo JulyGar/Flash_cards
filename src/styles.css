@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    background-color: #fafafa;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#FAFAFA] font-sans text-neutral-900 antialiased;
+  }
+}

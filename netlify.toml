@@ -1,0 +1,3 @@
+[build]
+command = "npx ng build"
+publish = "dist/demo/browser"
