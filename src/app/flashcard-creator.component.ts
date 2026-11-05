@@ -131,6 +131,7 @@ export class FlashcardCreatorComponent {
   save(): void {
     const front = this.frontField().nativeElement.value.trim();
     const back = this.backField().nativeElement.value.trim();
+    console.log('Guardando tarjeta', { front, back });
 
     if (!front || !back) {
       this.savedMessage.set(false);
