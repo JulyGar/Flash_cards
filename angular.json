@@ -21,6 +21,7 @@
               "base": "docs",
               "browser": ""
             },
+            "baseHref": "/Flash_cards/",
             "tsConfig": "tsconfig.app.json",
             "allowedCommonJsDependencies": [
               "extract-math"
