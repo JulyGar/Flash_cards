@@ -1,8 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core'; // <-- Añadido Input y OnInit
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-// IMPORTANTE: Descomenta esta línea si tu servicio está en la misma carpeta
-// import { FlashcardService } from './flashcard.service';
 
 @Component({
   selector: 'app-flashcard-creator',
@@ -14,7 +12,6 @@ import { CommonModule } from '@angular/common';
       
       <div class="mb-4">
         <label class="block text-sm font-medium text-[#6B7A3A] mb-1">Materia</label>
-        <!-- Puedes cambiar estas opciones por las que tengas en tu servicio -->
         <select [(ngModel)]="subjectId" class="w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-[#6B7A3A] focus:border-[#6B7A3A] bg-white">
           <option value="" disabled selected>Selecciona una materia</option>
           <option value="biologia">Biología</option>
@@ -45,9 +42,9 @@ import { CommonModule } from '@angular/common';
       </div>
 
       <p class="text-xs text-[#5F5B52] mb-5 bg-[#FBF8F4] p-3 rounded-xl border border-[#6B7A3A]/20 leading-relaxed">
-  💡 <strong>Tip para fórmulas:</strong> Escribe tu ecuación entre signos de dólar.<br>
-  Ejemplo: <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ x^2 $</code> o <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ a^2 + b^2 = c^2 $</code>
-</p>
+        💡 <strong>Tip para fórmulas:</strong> Escribe tu ecuación entre signos de dólar.<br>
+        Ejemplo: <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ x^2 $</code> o <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ a^2 + b^2 = c^2 $</code>
+      </p>
 
       <button 
         (click)="saveCard()" 
@@ -57,31 +54,26 @@ import { CommonModule } from '@angular/common';
     </div>
   `
 })
-export class FlashcardCreatorComponent {
-  // private flashcardService = inject(FlashcardService); // Descomenta si usas el servicio
+export class FlashcardCreatorComponent implements OnInit { // <-- Implementa OnInit
+  @Input() defaultSubjectId: string = ''; // <-- AÑADIDO AQUÍ
 
   subjectId = '';
   front = '';
   back = '';
 
+  ngOnInit() {
+    // Si viene una materia por defecto desde el componente padre, la selecciona
+    if (this.defaultSubjectId) {
+      this.subjectId = this.defaultSubjectId;
+    }
+  }
+
   saveCard() {
-    // 1. Validar que no estén vacíos
     if (!this.front || !this.back || !this.subjectId) {
       alert('Por favor, llena todos los campos.');
       return;
     }
 
-    // 2. Guardar en tu servicio (AQUÍ ESTÁ LA MAGIA)
-    // Descomenta y adapta estas líneas según cómo se llame tu método en el servicio:
-    /*
-    this.flashcardService.addFlashcard({
-      subjectId: this.subjectId,
-      front: this.front,
-      back: this.back
-    });
-    */
-
-    // 3. (Opcional) Si usas localStorage directamente, podrías guardarlo así:
     const existingCards = JSON.parse(localStorage.getItem('flashsci.flashcards') || '[]');
     existingCards.push({
       subjectId: this.subjectId,
@@ -90,11 +82,10 @@ export class FlashcardCreatorComponent {
     });
     localStorage.setItem('flashsci.flashcards', JSON.stringify(existingCards));
 
-    // 4. Limpiar el formulario
     this.front = '';
     this.back = '';
     
-    // Recargar la página para que se vea la nueva tarjeta (solución rápida sin tocar el servicio)
+    // Recargar la página
     window.location.reload();
   }
 }
