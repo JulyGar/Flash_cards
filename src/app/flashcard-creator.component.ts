@@ -117,6 +117,11 @@ export class FlashcardCreatorComponent {
       return;
     }
 
+    if (this.flashcards.hasSubjectNamed(name)) {
+      this.errorMessage.set('Ya existe una materia con ese nombre.');
+      return;
+    }
+
     const subject = this.flashcards.addSubject(name);
     this.selectedSubjectId.set(subject.id);
     this.newSubjectName.set('');

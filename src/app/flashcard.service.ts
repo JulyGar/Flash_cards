@@ -65,6 +65,10 @@ function isStoredFlashcard(value: unknown): value is StoredFlashcard {
   );
 }
 
+function normalizeName(name: string): string {
+  return name.trim().toLocaleLowerCase('es');
+}
+
 function readJson(key: string): unknown {
   try {
     const raw = localStorage.getItem(key);
@@ -95,12 +99,26 @@ export class FlashcardService {
     return this.cardsFor(subjectId).length;
   }
 
+  hasSubjectNamed(name: string): boolean {
+    const normalized = normalizeName(name);
+    return this.subjects().some((subject) => normalizeName(subject.name) === normalized);
+  }
+
   addSubject(name: string): Subject {
     const subject: Subject = { id: `materia-${Date.now().toString(36)}`, name: name.trim() };
     const next = [...this.subjects(), subject];
     this.subjects.set(next);
     writeJson(SUBJECTS_STORAGE_KEY, next);
     return subject;
+  }
+
+  deleteSubject(subjectId: string): void {
+    const nextSubjects = this.subjects().filter((subject) => subject.id !== subjectId);
+    const nextCards = this.cards().filter((card) => card.subjectId !== subjectId);
+    this.subjects.set(nextSubjects);
+    this.cards.set(nextCards);
+    writeJson(SUBJECTS_STORAGE_KEY, nextSubjects);
+    writeJson(CARDS_STORAGE_KEY, nextCards);
   }
 
   addCard(subjectId: string, front: string, back: string): void {
@@ -111,7 +129,7 @@ export class FlashcardService {
 
   private loadSubjects(): readonly Subject[] {
     const stored = readJson(SUBJECTS_STORAGE_KEY);
-    if (!Array.isArray(stored) || stored.length === 0 || !stored.every(isSubject)) {
+    if (!Array.isArray(stored) || !stored.every(isSubject)) {
       return INITIAL_SUBJECTS;
     }
     return stored;
@@ -119,7 +137,7 @@ export class FlashcardService {
 
   private loadCards(): readonly Flashcard[] {
     const stored = readJson(CARDS_STORAGE_KEY);
-    if (!Array.isArray(stored) || stored.length === 0 || !stored.every(isStoredFlashcard)) {
+    if (!Array.isArray(stored) || !stored.every(isStoredFlashcard)) {
       return INITIAL_CARDS;
     }
     // Las tarjetas guardadas antes de existir las materias pasan a Biología.
