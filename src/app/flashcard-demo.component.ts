@@ -1,4 +1,4 @@
-import { Component, OnDestroy, computed, signal } from '@angular/core';
+import { Component, OnDestroy, computed, signal, Input } from '@angular/core'; // <-- Input añadido
 import { KatexModule } from 'ng-katex-2';
 import { CommonModule } from '@angular/common';
 
@@ -102,7 +102,9 @@ const FLIP_DURATION_MS = 600;
   `]
 })
 export class FlashcardDemoComponent implements OnDestroy {
-  // ... (Mantén tus propiedades cards, signals y métodos igual que antes)
+  @Input() subjectId: string = ''; // <-- ESTA ERA LA LÍNEA QUE FALTABA
+
+  // Datos de prueba (luego los conectas a tu localStorage)
   readonly cards: readonly Flashcard[] = [
     { front: '¿Qué es la fotosíntesis?', back: 'Proceso por el que las plantas convierten la luz solar en glucosa y oxígeno.' },
     { front: 'Área del círculo:', back: 'El área es $ \\pi r^2 $ donde r es el radio.' }
@@ -120,6 +122,59 @@ export class FlashcardDemoComponent implements OnDestroy {
   readonly isLast = computed(() => this.currentIndex() === this.cards.length - 1);
   readonly progressLabel = computed(() => `${this.currentIndex() + 1} / ${this.cards.length}`);
 
+  private navigationTimer: any = null;
+
+  parseContent(text: string): { isMath: boolean, content: string }[] {
+    if (!text) return [];
+    const regex = /(\$[^$]+\$)/g;
+    const parts = text.split(regex);
+    return parts.filter(p => p !== '').map(part => {
+      if (part.startsWith('$') && part.endsWith('$')) {
+        return { isMath: true, content: part.slice(1, -1).trim() };
+      }
+      return { isMath: false, content: part };
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.navigationTimer) clearTimeout(this.navigationTimer);
+  }
+
+  flip(): void { if (!this.isAnimating()) this.isFlipped.update(f => !f); }
+  previous(): void { if (!this.isFirst()) this.navigateTo(this.currentIndex() - 1); }
+  next(): void { if (!this.isLast()) this.navigateTo(this.currentIndex() + 1); }
+  markKnown(): void { this.knownCount.update(c => c + 1); this.advance(); }
+  markReview(): void { this.reviewCount.update(c => c + 1); this.advance(); }
+  
+  restart(): void {
+    this.knownCount.set(0); 
+    this.reviewCount.set(0);
+    this.currentIndex.set(0); 
+    this.isFlipped.set(false);
+    this.isFinished.set(false);
+  }
+
+  private advance(): void {
+    if (this.isLast()) { 
+      this.isFinished.set(true); 
+      return; 
+    }
+    this.navigateTo(this.currentIndex() + 1);
+  }
+
+  private navigateTo(index: number): void {
+    if (!this.isFlipped()) { 
+      this.currentIndex.set(index); 
+      return; 
+    }
+    this.isAnimating.set(true); 
+    this.isFlipped.set(false);
+    this.navigationTimer = setTimeout(() => {
+      this.currentIndex.set(index);
+      this.isAnimating.set(false);
+    }, FLIP_DURATION_MS);
+  }
+}
   private navigationTimer: any = null;
 
   // LA MAGIA ESTÁ AQUÍ: Busca específicamente el patrón $...$
