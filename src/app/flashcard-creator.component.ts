@@ -1,11 +1,9 @@
-import type { MathfieldElement } from 'mathlive';
-import { CUSTOM_ELEMENTS_SCHEMA, Component, ElementRef, afterNextRender, inject, input, linkedSignal, signal, viewChild } from '@angular/core';
+import { Component, inject, input, linkedSignal, signal } from '@angular/core';
 import { FlashcardService } from './flashcard.service';
 
 @Component({
   selector: 'app-flashcard-creator',
   standalone: true,
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <section class="mx-auto flex w-full max-w-md flex-col gap-6 rounded-3xl bg-[#FBF8F4] p-8 font-sans text-[#3E3B33] shadow-[0_12px_32px_-16px_rgba(62,59,51,0.3)] ring-1 ring-black/5">
       <h3 class="text-xl font-semibold leading-[1.2]">Crea tu propia tarjeta</h3>
@@ -53,18 +51,28 @@ import { FlashcardService } from './flashcard.service';
       </div>
 
       <div class="flex flex-col gap-2">
-        <span class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Frente (Pregunta)</span>
-        <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-black/10 transition-shadow duration-200 focus-within:ring-2 focus-within:ring-[#6B7A3A]">
-          <math-field #frontField aria-label="Frente de la tarjeta" class="block w-full text-lg outline-none"></math-field>
-        </div>
+        <label for="flashcard-front" class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Frente (Pregunta)</label>
+        <textarea
+          id="flashcard-front"
+          rows="3"
+          [value]="frontText()"
+          (input)="frontText.set(fieldValue($event))"
+          placeholder="Ej.: ¿Qué es la fotosíntesis?"
+          class="h-24 w-full resize-none rounded-2xl bg-white px-4 py-3 text-base leading-[1.5] text-[#3E3B33] placeholder:text-[#8F8A7E] ring-1 ring-black/10 transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-[#6B7A3A]"
+        ></textarea>
       </div>
 
       <div class="flex flex-col gap-2">
-        <span class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Reverso (Respuesta)</span>
-        <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-black/10 transition-shadow duration-200 focus-within:ring-2 focus-within:ring-[#6B7A3A]">
-          <math-field #backField aria-label="Reverso de la tarjeta" class="block w-full text-lg outline-none"></math-field>
-        </div>
-        <p class="text-xs leading-[1.5] text-[#6F6B61]">Escribe texto o fórmulas. Las fórmulas se muestran con formato matemático.</p>
+        <label for="flashcard-back" class="text-xs font-medium uppercase tracking-widest text-[#6B7A3A]">Reverso (Respuesta)</label>
+        <textarea
+          id="flashcard-back"
+          rows="3"
+          [value]="backText()"
+          (input)="backText.set(fieldValue($event))"
+          placeholder="Ej.: Proceso por el que las plantas convierten la luz en energía."
+          class="h-24 w-full resize-none rounded-2xl bg-white px-4 py-3 text-base leading-[1.5] text-[#3E3B33] placeholder:text-[#8F8A7E] ring-1 ring-black/10 transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-[#6B7A3A]"
+        ></textarea>
+        <p class="text-xs leading-[1.5] text-[#6F6B61]">Para una fórmula, enciérrala entre signos de dólar, por ejemplo $x^2$.</p>
       </div>
 
       @if (errorMessage()) {
@@ -88,25 +96,18 @@ import { FlashcardService } from './flashcard.service';
 export class FlashcardCreatorComponent {
   protected readonly flashcards = inject(FlashcardService);
 
-  readonly frontField = viewChild.required<ElementRef<MathfieldElement>>('frontField');
-  readonly backField = viewChild.required<ElementRef<MathfieldElement>>('backField');
-
   readonly defaultSubjectId = input.required<string>();
   readonly selectedSubjectId = linkedSignal(() => this.defaultSubjectId());
 
+  readonly frontText = signal('');
+  readonly backText = signal('');
   readonly showNewSubject = signal(false);
   readonly newSubjectName = signal('');
   readonly errorMessage = signal<string | null>(null);
   readonly savedMessage = signal(false);
 
-  constructor() {
-    afterNextRender(() => {
-      void import('mathlive');
-    });
-  }
-
   fieldValue(event: Event): string {
-    return (event.target as HTMLInputElement | HTMLSelectElement).value;
+    return (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value;
   }
 
   addSubject(): void {
@@ -129,8 +130,8 @@ export class FlashcardCreatorComponent {
   }
 
   save(): void {
-    const front = this.frontField().nativeElement.value.trim();
-    const back = this.backField().nativeElement.value.trim();
+    const front = this.frontText().trim();
+    const back = this.backText().trim();
     console.log('Guardando tarjeta', { front, back });
 
     if (!front || !back) {
@@ -139,14 +140,10 @@ export class FlashcardCreatorComponent {
       return;
     }
 
-    this.flashcards.addCard(this.selectedSubjectId(), toFormula(front), toFormula(back));
-    this.frontField().nativeElement.value = '';
-    this.backField().nativeElement.value = '';
+    this.flashcards.addCard(this.selectedSubjectId(), front, back);
+    this.frontText.set('');
+    this.backText.set('');
     this.errorMessage.set(null);
     this.savedMessage.set(true);
   }
-}
-
-function toFormula(latex: string): string {
-  return `$${latex}$`;
 }
