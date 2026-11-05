@@ -45,9 +45,9 @@ import { CommonModule } from '@angular/common';
       </div>
 
       <p class="text-xs text-[#5F5B52] mb-5 bg-[#FBF8F4] p-3 rounded-xl border border-[#6B7A3A]/20 leading-relaxed">
-        💡 <strong>Tip para fórmulas:</strong> Escribe tu ecuación entre signos de dólar.<br>
-        Ejemplo: <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ x^2 $</code> o <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ \\int_{0}^{1} x dx $</code>
-      </p>
+  💡 <strong>Tip para fórmulas:</strong> Escribe tu ecuación entre signos de dólar.<br>
+  Ejemplo: <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ x^2 $</code> o <code class="bg-white px-1 rounded border border-gray-200 text-[#6B7A3A]">$ a^2 + b^2 = c^2 $</code>
+</p>
 
       <button 
         (click)="saveCard()" 
