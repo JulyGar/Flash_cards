@@ -1,5 +1,5 @@
 import { Component, OnDestroy, computed, signal } from '@angular/core';
-import { KatexModule } from 'ng-katex';
+import { KatexModule } from 'ng-katex-2';
 import { CommonModule } from '@angular/common';
 
 interface Flashcard {
