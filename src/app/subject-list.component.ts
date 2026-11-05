@@ -9,7 +9,7 @@ import { FlashcardService, Subject } from './flashcard.service';
       <button
         type="button"
         (click)="openForm()"
-        class="rounded-full bg-[#6B7A3A] px-5 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#5A6831] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6B7A3A]"
+        class="rounded-full bg-[#222222] px-5 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#5A6831] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6B7A3A]"
       >
         + Materia
       </button>
